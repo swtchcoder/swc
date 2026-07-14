@@ -55,6 +55,9 @@ struct surface_state {
 
 struct surface {
 	struct wl_resource *resource;
+	struct {
+		struct wl_signal commit;
+	} signal;
 
 	struct surface_state state;
 
@@ -67,9 +70,13 @@ struct surface {
 	struct wld_buffer *buffer;
 	struct view *view;
 	struct view_handler view_handler;
+	struct wl_resource *role;
+	struct wl_listener role_destroy_listener;
 };
 
 struct surface *surface_new(struct wl_client *client, uint32_t version, uint32_t id);
 void surface_set_view(struct surface *surface, struct view *view);
+bool surface_set_role(struct surface *surface, struct wl_resource *role);
+bool surface_has_buffer(struct surface *surface);
 
 #endif

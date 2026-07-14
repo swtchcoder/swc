@@ -32,6 +32,7 @@ SWC_SOURCES =                       \
     libswc/input.c                  \
     libswc/kde_decoration.c         \
     libswc/keyboard.c               \
+    libswc/layer_shell.c            \
     libswc/launch.c                 \
     libswc/mode.c                   \
     libswc/output.c                 \
@@ -60,6 +61,7 @@ SWC_SOURCES =                       \
     protocol/server-decoration-protocol.c \
     protocol/swc-protocol.c         \
     protocol/wayland-drm-protocol.c \
+    protocol/wlr-layer-shell-unstable-v1-protocol.c \
     protocol/xdg-decoration-unstable-v1-protocol.c \
     protocol/xdg-output-unstable-v1-protocol.c \
     protocol/xdg-shell-protocol.c
@@ -93,6 +95,7 @@ $(call objects,compositor panel_manager panel screen): protocol/swc-server-proto
 $(call objects,dmabuf): protocol/linux-dmabuf-unstable-v1-server-protocol.h
 $(call objects,drm drm_buffer): protocol/wayland-drm-server-protocol.h
 $(call objects,kde_decoration): protocol/server-decoration-server-protocol.h
+$(call objects,layer_shell): protocol/wlr-layer-shell-unstable-v1-server-protocol.h
 $(call objects,xdg_decoration): protocol/xdg-decoration-unstable-v1-server-protocol.h
 $(call objects,xdg_output): protocol/xdg-output-unstable-v1-server-protocol.h
 $(call objects,xdg_shell): protocol/xdg-shell-server-protocol.h

@@ -457,13 +457,18 @@ xdg_toplevel_new(struct wl_client *client, uint32_t version, uint32_t id, struct
 	toplevel->resource = wl_resource_create(client, &xdg_toplevel_interface, version, id);
 	if (!toplevel->resource)
 		goto error1;
-	window_initialize(&toplevel->window, &toplevel_window_impl, xdg_surface->surface);
+	if (!surface_set_role(xdg_surface->surface, toplevel->resource))
+		goto error2;
+	if (!window_initialize(&toplevel->window, &toplevel_window_impl, xdg_surface->surface))
+		goto error2;
 	wl_array_init(&toplevel->states);
 	wl_resource_set_implementation(toplevel->resource, &toplevel_impl, toplevel, &destroy_toplevel);
 	window_manage(&toplevel->window);
 
 	return toplevel;
 
+error2:
+	wl_resource_destroy(toplevel->resource);
 error1:
 	free(toplevel);
 error0:
@@ -508,10 +513,12 @@ xdg_popup_new(struct wl_client *client, uint32_t version, uint32_t id, struct xd
 	popup->resource = wl_resource_create(client, &xdg_popup_interface, version, id);
 	if (!popup->resource)
 		goto error1;
-	wl_resource_set_implementation(popup->resource, &popup_impl, popup, &destroy_popup);
+	if (!surface_set_role(xdg_surface->surface, popup->resource))
+		goto error2;
 	popup->view = compositor_create_view(xdg_surface->surface);
 	if (!popup->view)
-		goto error2;
+		goto error3;
+	wl_resource_set_implementation(popup->resource, &popup_impl, popup, &destroy_popup);
 
 	rect = calculate_position(positioner);
 	compositor_view_set_parent(popup->view, parent_view);
@@ -521,8 +528,9 @@ xdg_popup_new(struct wl_client *client, uint32_t version, uint32_t id, struct xd
 
 	return popup;
 
-error2:
+error3:
 	wl_resource_destroy(popup->resource);
+error2:
 error1:
 	free(popup);
 error0:
@@ -537,6 +545,10 @@ get_toplevel(struct wl_client *client, struct wl_resource *resource, uint32_t id
 	struct xdg_toplevel *toplevel;
 
 	if (xdg_surface->role) {
+		wl_resource_post_error(resource, XDG_WM_BASE_ERROR_ROLE, "surface already has a role");
+		return;
+	}
+	if (xdg_surface->surface->role) {
 		wl_resource_post_error(resource, XDG_WM_BASE_ERROR_ROLE, "surface already has a role");
 		return;
 	}
@@ -558,6 +570,10 @@ get_popup(struct wl_client *client, struct wl_resource *resource, uint32_t id, s
 	struct xdg_popup *popup;
 
 	if (xdg_surface->role) {
+		wl_resource_post_error(resource, XDG_WM_BASE_ERROR_ROLE, "surface already has a role");
+		return;
+	}
+	if (xdg_surface->surface->role) {
 		wl_resource_post_error(resource, XDG_WM_BASE_ERROR_ROLE, "surface already has a role");
 		return;
 	}

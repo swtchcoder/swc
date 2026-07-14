@@ -47,6 +47,7 @@ struct swc {
 	struct swc_drm *const drm;
 	struct wl_global *data_device_manager;
 	struct wl_global *kde_decoration_manager;
+	struct wl_global *layer_shell;
 	struct wl_global *panel_manager;
 	struct wl_global *shell;
 	struct wl_global *subcompositor;

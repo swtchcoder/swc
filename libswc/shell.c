@@ -23,6 +23,7 @@
 
 #include "shell.h"
 #include "internal.h"
+#include "surface.h"
 #include "shell_surface.h"
 
 #include <wayland-server.h>
@@ -32,6 +33,11 @@ get_shell_surface(struct wl_client *client, struct wl_resource *resource, uint32
 {
 	struct surface *surface = wl_resource_get_user_data(surface_resource);
 	struct shell_surface *shell_surface;
+
+	if (surface->role) {
+		wl_resource_post_error(resource, WL_SHELL_ERROR_ROLE, "surface already has a role");
+		return;
+	}
 
 	shell_surface = shell_surface_new(client, wl_resource_get_version(resource), id, surface);
 

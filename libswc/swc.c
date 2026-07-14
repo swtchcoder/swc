@@ -31,6 +31,7 @@
 #include "launch.h"
 #include "kde_decoration.h"
 #include "keyboard.h"
+#include "layer_shell.h"
 #include "panel_manager.h"
 #include "pointer.h"
 #include "screen.h"
@@ -191,22 +192,28 @@ swc_initialize(struct wl_display *display, struct wl_event_loop *event_loop, con
 		goto error12;
 	}
 
+	swc.layer_shell = layer_shell_create(display);
+	if (!swc.layer_shell) {
+		ERROR("Could not initialize layer shell\n");
+		goto error13;
+	}
+
 	swc.panel_manager = panel_manager_create(display);
 	if (!swc.panel_manager) {
 		ERROR("Could not initialize panel manager\n");
-		goto error13;
+		goto error14;
 	}
 
 	swc.xdg_output_manager = xdg_output_manager_create(display);
 	if (!swc.xdg_output_manager) {
 		ERROR("Could not initialize XDG output manager\n");
-		goto error14;
+		goto error15;
 	}
 
 #ifdef ENABLE_XWAYLAND
 	if (!xserver_initialize()) {
 		ERROR("Could not initialize xwayland\n");
-		goto error15;
+		goto error16;
 	}
 #endif
 
@@ -215,11 +222,13 @@ swc_initialize(struct wl_display *display, struct wl_event_loop *event_loop, con
 	return true;
 
 #ifdef ENABLE_XWAYLAND
-error15:
+error16:
 	wl_global_destroy(swc.xdg_output_manager);
 #endif
-error14:
+error15:
 	wl_global_destroy(swc.panel_manager);
+error14:
+	wl_global_destroy(swc.layer_shell);
 error13:
 	wl_global_destroy(swc.kde_decoration_manager);
 error12:
@@ -258,6 +267,7 @@ swc_finalize(void)
 #endif
 	wl_global_destroy(swc.xdg_output_manager);
 	wl_global_destroy(swc.panel_manager);
+	wl_global_destroy(swc.layer_shell);
 	wl_global_destroy(swc.xdg_decoration_manager);
 	wl_global_destroy(swc.xdg_shell);
 	wl_global_destroy(swc.shell);

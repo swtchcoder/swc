@@ -38,6 +38,7 @@ get_output(struct wl_client *client, struct wl_resource *resource, uint32_t id, 
 	struct output *output =
 	    wl_resource_get_user_data(output_resource);
 	struct swc_rectangle *geom = &output->screen->base.geometry;
+	struct wl_resource *wl_output_resource;
 
 	resource = wl_resource_create(client, &zxdg_output_v1_interface, wl_resource_get_version(resource), id);
 	if (!resource) {
@@ -48,12 +49,15 @@ get_output(struct wl_client *client, struct wl_resource *resource, uint32_t id, 
 	wl_resource_set_implementation(resource, &output_impl, NULL, NULL);
 	zxdg_output_v1_send_logical_position(resource, geom->x, geom->y);
 	zxdg_output_v1_send_logical_size(resource, geom->width, geom->height);
-	if (wl_resource_get_version(resource) >= 2)
+	if (wl_resource_get_version(resource) >= 2) {
 		zxdg_output_v1_send_name(resource, output->name);
-	if (wl_resource_get_version(resource) < 3)
-		zxdg_output_v1_send_done(resource);
-	else
-		wl_output_send_done(output->resource);
+		zxdg_output_v1_send_description(resource, output->name);
+	}
+	zxdg_output_v1_send_done(resource);
+
+	wl_output_resource = wl_resource_find_for_client(&output->resources, client);
+	if (wl_output_resource && wl_resource_get_version(wl_output_resource) >= 2)
+		wl_output_send_done(wl_output_resource);
 }
 
 static const struct zxdg_output_manager_v1_interface output_manager_impl = {

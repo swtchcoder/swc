@@ -226,14 +226,19 @@ shell_surface_new(struct wl_client *client, uint32_t version, uint32_t id, struc
 
 	if (!shell_surface->resource)
 		goto error1;
+	if (!surface_set_role(surface, shell_surface->resource))
+		goto error2;
+	if (!window_initialize(&shell_surface->window, &window_impl, surface))
+		goto error2;
 
 	wl_resource_set_implementation(shell_surface->resource, &shell_surface_implementation, shell_surface, &destroy_shell_surface);
-	window_initialize(&shell_surface->window, &window_impl, surface);
 	shell_surface->surface_destroy_listener.notify = &handle_surface_destroy;
 	wl_resource_add_destroy_listener(surface->resource, &shell_surface->surface_destroy_listener);
 
 	return shell_surface;
 
+error2:
+	wl_resource_destroy(shell_surface->resource);
 error1:
 	free(shell_surface);
 error0:
